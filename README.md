@@ -14,12 +14,13 @@ https://physionet.org/content/mitdb/
 2. Create Folder Structure
 
 Inside the project directory, create the following folder:
-
 project-root/
 │── data/
 │   └── (place dataset files here)
 │── src/
 │── README.md
+
+
 3. Add Dataset Files
 
 Extract and place all downloaded dataset files inside the data/ folder.
