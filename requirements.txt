@@ -1,3 +1,4 @@
+pip install --upgrade pip
 streamlit
 torch
 torchvision
@@ -24,4 +25,3 @@ pandas
 wfdb
 streamlit
 matplotlib
-
