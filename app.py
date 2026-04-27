@@ -132,13 +132,13 @@ if uploaded_files:
         except Exception as e:
             st.error(f"Error reading WFDB: {e}")
     elif csv_files:
-    df = pd.read_csv(csv_files[0])
+        df = pd.read_csv(csv_files[0])
 
-    # Fix: handle text + numeric safely
-    signal = pd.to_numeric(df.iloc[:,0], errors='coerce')
-    signal = signal.dropna().values
+    
+        signal = pd.to_numeric(df.iloc[:,0], errors='coerce')
+        signal = signal.dropna().values
 
-    st.success(f"✅ Loaded CSV signal (len={len(signal)})")
+        st.success(f"✅ Loaded CSV signal (len={len(signal)})")
     else:
         st.warning("Please upload WFDB (.dat/.hea/.atr) or CSV")
 
