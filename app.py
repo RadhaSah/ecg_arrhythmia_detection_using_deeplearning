@@ -234,7 +234,7 @@ if signal is not None:
            st.warning("🟠 Moderate Risk")
         else:
            st.success("🟢 Low Risk")
-        st.subheader("🧾 Possible Conditions Explanation")
+        st.subheader("Possible Conditions Explanation")
 
         disease_info = {
     "Atrial Premature Beat (APB)": "Irregular early beats from atria. May indicate atrial arrhythmia.",
@@ -246,6 +246,6 @@ if signal is not None:
         for disease, count in disease_summary.items():
             if disease in disease_info:
                 st.markdown(f"### 🔹 {disease}")
-                st.write(f"🧠 **Explanation:** {disease_info[disease]}")
-                st.write(f"📊 **Detected in {count} beats**") 
+                st.write(f"**Explanation:** {disease_info[disease]}")
+                st.write(f" **Detected in {count} beats**") 
         st.warning("⚠️ This is an AI-based prediction. Please consult a medical professional.")
