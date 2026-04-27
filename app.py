@@ -227,3 +227,25 @@ if signal is not None:
         st.error(f"⚠️ Disease detected in {disease_count}/{total_beats} beats ({disease_percentage:.1f}%)")
         disease_summary = disease_beats["Label"].value_counts()
         st.table(disease_summary)
+        # Risk Level
+        if disease_percentage > 50:
+           st.error("🔴 High Risk Detected")
+        elif disease_percentage > 20:
+           st.warning("🟠 Moderate Risk")
+        else:
+           st.success("🟢 Low Risk")
+        st.subheader("🧾 Possible Conditions Explanation")
+
+        disease_info = {
+    "Atrial Premature Beat (APB)": "Irregular early beats from atria. May indicate atrial arrhythmia.",
+    "Fusion of Ventricular and Normal Beat": "Abnormal fusion of normal and ventricular beats. Can indicate ventricular issues.",
+    "Unclassifiable Beat": "Irregular pattern not clearly classified. Needs further clinical analysis.",
+    "Normal": "No abnormality detected"
+}
+
+        for disease, count in disease_summary.items():
+            if disease in disease_info:
+                st.markdown(f"### 🔹 {disease}")
+                st.write(f"🧠 **Explanation:** {disease_info[disease]}")
+                st.write(f"📊 **Detected in {count} beats**") 
+        st.warning("⚠️ This is an AI-based prediction. Please consult a medical professional.")
