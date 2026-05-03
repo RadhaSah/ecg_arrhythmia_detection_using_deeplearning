@@ -70,7 +70,7 @@ model.eval()
 # ---------------------------
 st.set_page_config(page_title="🫀 ECG Arrhythmia Detection", layout="wide")
 
-st.sidebar.header("⚙️ Settings")
+
 # ---------------------------
 # 💬 Offline ECG Assistant
 # ---------------------------
