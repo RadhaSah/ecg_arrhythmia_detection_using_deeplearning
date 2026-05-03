@@ -66,7 +66,8 @@ class ECGDataset(Dataset):
                         elif sym == "A": label = 1
                         elif sym == "V": label = 2
                         elif sym == "F": label = 3
-                        else:             label = 4
+                        else:
+                            continue
 
                         self.beats.append(beat)
                         self.labels.append(label)

@@ -10,6 +10,7 @@ import os
 import matplotlib.pyplot as plt
 import tempfile
 
+
 # Optional WFDB support
 try:
     import wfdb
@@ -70,6 +71,81 @@ model.eval()
 st.set_page_config(page_title="🫀 ECG Arrhythmia Detection", layout="wide")
 
 st.sidebar.header("⚙️ Settings")
+# ---------------------------
+# 💬 Offline ECG Assistant
+# ---------------------------
+st.sidebar.subheader("💬 ECG Assistant")
+
+if "chat_history" not in st.session_state:
+    st.session_state.chat_history = []
+
+st.sidebar.markdown("### 💡 Try asking:")
+st.sidebar.markdown("""
+- How CNN works in ECG?
+- Difference between PVC and APB?
+- Why model gives uncertain?
+- Explain arrhythmia in detail
+""")
+
+user_input = st.sidebar.text_input("Ask your question:")
+
+
+def chatbot_response(query):
+    q = query.lower()
+
+    # Simple
+    if "ecg" in q:
+        return "ECG (Electrocardiogram) measures electrical activity of the heart."
+
+    elif "arrhythmia" in q:
+        return "Arrhythmia is an irregular heartbeat caused by abnormal electrical signals."
+
+    elif "pvc" in q:
+        return "PVC is an early heartbeat from ventricles, often showing a wide waveform."
+
+    elif "apb" in q:
+        return "APB is an early heartbeat from atria."
+
+    # Deep
+    elif "cnn" in q:
+        return ("CNN automatically extracts features like QRS complex, P waves, and T waves "
+                "from ECG signals and classifies them.")
+
+    elif "difference between pvc and apb" in q:
+        return ("APB originates in atria, while PVC originates in ventricles. "
+                "PVC has wider abnormal waveform.")
+
+    elif "uncertain" in q:
+        return ("Uncertain is used when model confidence is low to avoid incorrect predictions.")
+
+    elif "explain arrhythmia" in q:
+        return ("Arrhythmia is abnormal heart rhythm. Types include APB, PVC, tachycardia, and bradycardia.")
+
+    elif "risk" in q:
+        return "Risk is calculated based on abnormal beats percentage: Low (<30%), Moderate (30–60%), High (>60%)."
+
+    elif "dataset" in q:
+        return "The model is trained on MIT-BIH Arrhythmia dataset."
+
+    elif "model working" in q:
+        return ("ECG signals are processed, beats extracted, CNN classifies them, and risk is calculated.")
+
+    # Fallback
+    else:
+        return "Sorry, I can answer ECG-related questions only (try CNN, PVC, APB, arrhythmia, risk, model)."
+
+
+# Handle input
+if user_input:
+    response = chatbot_response(user_input)
+    st.session_state.chat_history.append(("You", user_input))
+    st.session_state.chat_history.append(("Bot", response))
+
+
+# Display chat
+for role, msg in st.session_state.chat_history:
+    st.sidebar.write(f"**{role}:** {msg}")
+
 dark_mode = st.sidebar.toggle("🌙 Dark Mode", value=False)  # Default = Light mode
 
 # Optional plotting theme
@@ -175,8 +251,12 @@ if signal is not None:
 
         preds.append(pred)
         confidences.append(confidence)
-        labels.append(label_map[str(pred)])  # <-- use label_map.json
-
+        if confidence < 60:
+            label = "Uncertain"
+        else:
+            label = label_map[str(pred)]
+        labels.append(label)
+        
         # Grad-CAM calculation
         h = features.register_hook(save_grad)
         model.zero_grad()
@@ -188,7 +268,7 @@ if signal is not None:
         if cam.max() > 0:
             cam = cam / cam.max()
         h.remove()
-        plot_gradcam(beat, cam, i, label_map[str(pred)], confidence)
+        plot_gradcam(beat, cam, i, label, confidence)
 
     # ---------------------------
     # Beat-wise Prediction Table
@@ -202,7 +282,7 @@ if signal is not None:
     })
 
     df_display = df_out.copy()
-    df_display["Confidence (%)"] = df_display["Confidence"].map(lambda x: f"{x:.2f}")
+    df_display["Confidence (%)"] = df_display["Confidence"].map(lambda x: f"{x:.2f}%")
     df_display = df_display[["Beat", "Prediction Index", "Label", "Confidence (%)"]]
 
     st.dataframe(df_display, use_container_width=True)
@@ -216,7 +296,10 @@ if signal is not None:
     # ---------------------------
     st.subheader("🩺 Final Diagnosis")
 
-    disease_beats = df_out[df_out["Label"] != label_map["0"]]
+    disease_beats = df_out[
+    (df_out["Label"] != "Normal") &
+    (df_out["Label"] != "Unclassifiable Beat") &
+    (df_out["Label"] != "Uncertain")]
     total_beats = len(df_out)
 
     if len(disease_beats) == 0:
@@ -226,11 +309,14 @@ if signal is not None:
         disease_percentage = (disease_count/total_beats)*100
         st.error(f"⚠️ Disease detected in {disease_count}/{total_beats} beats ({disease_percentage:.1f}%)")
         disease_summary = disease_beats["Label"].value_counts()
+        # Optional safety filter
+        disease_summary = disease_summary.drop(labels=["Uncertain"], errors='ignore')
         st.table(disease_summary)
+
         # Risk Level
-        if disease_percentage > 50:
+        if disease_percentage > 60:
            st.error("🔴 High Risk Detected")
-        elif disease_percentage > 20:
+        elif disease_percentage > 30:
            st.warning("🟠 Moderate Risk")
         else:
            st.success("🟢 Low Risk")
@@ -240,8 +326,8 @@ if signal is not None:
     "Atrial Premature Beat (APB)": "Irregular early beats from atria. May indicate atrial arrhythmia.",
     "Fusion of Ventricular and Normal Beat": "Abnormal fusion of normal and ventricular beats. Can indicate ventricular issues.",
     "Unclassifiable Beat": "Irregular pattern not clearly classified. Needs further clinical analysis.",
-    "Normal": "No abnormality detected"
-}
+    "Normal": "No abnormality detected.",
+    "Uncertain": "Model is not confident about this beat. May be noise or unclear signal."}
 
         for disease, count in disease_summary.items():
             if disease in disease_info:
